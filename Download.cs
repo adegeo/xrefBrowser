@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Text.Json;
 using xrefBrowser.Model;
+using xrefBrowser.ViewModel;
 
 namespace xrefBrowser
 {
@@ -24,7 +13,8 @@ namespace xrefBrowser
         CancellationTokenSource _loadingSource;
         IProgress<ProgressData> _progress;
 
-        internal XREF Xref;
+        public MainFormViewModel? ViewModel;
+
 
         public Download()
         {
@@ -39,94 +29,121 @@ namespace xrefBrowser
             // If date file is missing, download
             // If crc data is different, download
             Task.Run(Start, _loadingSource.Token)
-                .ContinueWith((t) => { Xref = t.Result; DialogResult = DialogResult.OK; }, TaskScheduler.FromCurrentSynchronizationContext());
+                .ContinueWith((t) => { ViewModel = t.Result; DialogResult = DialogResult.OK; }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private async Task<XREF> Start()
+        private async Task<MainFormViewModel?> Start()
         {
             HttpClient httpClient = new();
-            XREF result;
-            CancellationTokenSource httpDownloadTokenSource = new();
+            XREF? xrefData = null;
+            using CancellationTokenSource httpDownloadTokenSource = new();
+            XrefFileInfo xrefInfo;
 
             _progress.Report(new("Loading", 0, TOTAL_STEPS));
             await Task.Delay(1000, _loadingSource.Token);
 
             // Check if the file exists locally
             _progress.Report(new("Checking if data file exists", 0, TOTAL_STEPS));
+
             if (XREF.XrefMapExists() && XREF.StatusFileExists())
             {
-                httpDownloadTokenSource.CancelAfter(5000);
-
-                // Check if file is the latest version
-                _progress.Report(new("Downloading", 0, TOTAL_STEPS));
-                XrefFileInfo xrefInfo = await DownloadHeaderData(httpClient, httpDownloadTokenSource.Token);
-
-                if (httpDownloadTokenSource.IsCancellationRequested)
-                {
-                    return null;
-                }
-
-                _progress.Report(new("Validate file is up-to-date", 0, TOTAL_STEPS));
                 // Compare the date times
                 XrefFileInfo info = JsonSerializer.Deserialize<XrefFileInfo>(System.IO.File.ReadAllText("xrefinfo.json"));
 
+                try
+                {
+                    httpDownloadTokenSource.CancelAfter(5000);
+
+                    // Check if file is the latest version
+                    _progress.Report(new("Downloading", 0, TOTAL_STEPS));
+
+                    xrefInfo = await DownloadHeaderData(httpClient, httpDownloadTokenSource.Token);
+
+                    _progress.Report(new("Finished downloading header info", 0, TOTAL_STEPS));
+                }
+                catch (Exception e)
+                {
+                    xrefInfo = info;
+                    _progress.Report(new("Unable to download xref. Loading cached copy.", 0, TOTAL_STEPS));
+                    await Task.Delay(2000);
+                }
+                
                 // All good, exit
                 if (info.LastUpdated == xrefInfo.LastUpdated)
                 {
-                    _progress.Report(new("File is up-to-date, loading...", 0, TOTAL_STEPS));
-                    result = new()
+                    _progress.Report(new("Loading XREF map...", 0, TOTAL_STEPS));
+                    xrefData = new()
                     {
                         Info = info,
                         XrefMap = JsonDocument.Parse(System.IO.File.ReadAllText(".xrefmap.json"))
                     };
 
-                    return result;
+                    _progress.Report(new("Deserializing XREF types", 0, TOTAL_STEPS));
+
+                    return new(xrefData);
                 }
                 // Not good, exit the if statement and continue to download
             }
 
             // Download the latest file
+            httpDownloadTokenSource.TryReset();
             httpDownloadTokenSource.CancelAfter(15000);
 
-            _progress.Report(new("Local files missing. Downloading filez", 0, TOTAL_STEPS));
-            (XrefFileInfo Info, string Json) result2 = await DownloadFile(httpClient, httpDownloadTokenSource.Token);
-
-            if (httpDownloadTokenSource.IsCancellationRequested)
+            try
             {
-                return null;
+                _progress.Report(new("Local files missing or old. Downloading filez", 0, TOTAL_STEPS));
+                (XrefFileInfo Info, string Json) result2 = await DownloadFile(httpClient, httpDownloadTokenSource.Token);
+
+                // Write the data
+                File.WriteAllText("xrefinfo.json", JsonSerializer.Serialize(result2.Info));
+                File.WriteAllText(".xrefmap.json", result2.Json);
+
+                // Create the final object
+                xrefData = new()
+                {
+                    Info = result2.Info,
+                    XrefMap = JsonDocument.Parse(result2.Json)
+                };
+
+                _progress.Report(new($"Done!", 0, TOTAL_STEPS));
+            }
+            catch (Exception)
+            {
+                _progress.Report(new ("Unable to download filez 😭", 0, TOTAL_STEPS));
             }
 
-            // Write the data
-            System.IO.File.WriteAllText("xrefinfo.json", JsonSerializer.Serialize(result2.Info));
-            System.IO.File.WriteAllText(".xrefmap.json", result2.Json);
-
-            // Create the final object
-            result = new()
+            if (xrefData != null)
             {
-                Info = result2.Info,
-                XrefMap = JsonDocument.Parse(result2.Json)
-            };
+                _progress.Report(new("Deserializing XREF types", 0, TOTAL_STEPS));
+                return new(xrefData);
+            }
 
-            _progress.Report(new($"Done!", 0, TOTAL_STEPS));
-
-            return result;
+            return null;
         }
 
         private async Task<XrefFileInfo> DownloadHeaderData(HttpClient httpClient, CancellationToken cancelToken)
         {
-            _progress.Report(new("Contacting Microsoft Learn for latest .xrefmap.json date", 0, TOTAL_STEPS));
+            //try
+            //{
+                _progress.Report(new("Contacting Microsoft Learn for latest .xrefmap.json date", 0, TOTAL_STEPS));
 
-            using HttpRequestMessage request = new(HttpMethod.Head, "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json");
-            using HttpResponseMessage response = await httpClient.SendAsync(request, cancelToken);
+                using HttpRequestMessage request = new(HttpMethod.Head, "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json");
+                using HttpResponseMessage response = await httpClient.SendAsync(request, cancelToken);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                _progress.Report(new($"Error: Unable to get header info, result code {response.StatusCode}", 0, TOTAL_STEPS));
-                _loadingSource.Cancel();
-                return new XrefFileInfo();
-            }
+                if (!response.IsSuccessStatusCode)
+                {
+                    _progress.Report(new($"Error: Unable to get header info, result code {response.StatusCode}", 0, TOTAL_STEPS));
+                    _loadingSource.Cancel();
+                    return new XrefFileInfo();
+                }
 
-            return new XrefFileInfo(DateTime.Parse(response.Content.Headers.GetValues("Last-Modified").First()), "");
+                return new XrefFileInfo(DateTime.Parse(response.Content.Headers.GetValues("Last-Modified").First()), "");
+
+            //}
+            //catch (Exception)
+            //{
+            //    return new XrefFileInfo();
+            //}
         }
 
         private async Task<(XrefFileInfo Info, string Json)> DownloadFile(HttpClient httpClient, CancellationToken cancelToken)

@@ -29,107 +29,175 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            tableLayoutPanel1 = new TableLayoutPanel();
-            tableLayoutPanel2 = new TableLayoutPanel();
-            textBox1 = new TextBox();
             mainFormBindingSource = new BindingSource(components);
+            resultsBindingSource = new BindingSource(components);
+            listBox1 = new ListBox();
+            textBox1 = new TextBox();
             button1 = new Button();
-            treeView1 = new TreeView();
-            tableLayoutPanel1.SuspendLayout();
-            tableLayoutPanel2.SuspendLayout();
+            label1 = new Label();
+            chkOnlyStartsWith = new CheckBox();
+            groupBox1 = new GroupBox();
+            lblSignature = new Label();
+            label3 = new Label();
+            lblName = new Label();
+            label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)mainFormBindingSource).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)resultsBindingSource).BeginInit();
+            groupBox1.SuspendLayout();
             SuspendLayout();
-            // 
-            // tableLayoutPanel1
-            // 
-            tableLayoutPanel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            tableLayoutPanel1.ColumnCount = 2;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32.5097542F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 67.49025F));
-            tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 0, 0);
-            tableLayoutPanel1.Controls.Add(treeView1, 0, 1);
-            tableLayoutPanel1.Location = new Point(12, 12);
-            tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 2;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Size = new Size(769, 467);
-            tableLayoutPanel1.TabIndex = 0;
-            // 
-            // tableLayoutPanel2
-            // 
-            tableLayoutPanel2.ColumnCount = 2;
-            tableLayoutPanel1.SetColumnSpan(tableLayoutPanel2, 2);
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle());
-            tableLayoutPanel2.Controls.Add(textBox1, 0, 0);
-            tableLayoutPanel2.Controls.Add(button1, 1, 0);
-            tableLayoutPanel2.Dock = DockStyle.Fill;
-            tableLayoutPanel2.Location = new Point(0, 0);
-            tableLayoutPanel2.Margin = new Padding(0);
-            tableLayoutPanel2.Name = "tableLayoutPanel2";
-            tableLayoutPanel2.RowCount = 1;
-            tableLayoutPanel2.RowStyles.Add(new RowStyle());
-            tableLayoutPanel2.Size = new Size(769, 30);
-            tableLayoutPanel2.TabIndex = 0;
-            // 
-            // textBox1
-            // 
-            textBox1.DataBindings.Add(new Binding("Text", mainFormBindingSource, "Query", true, DataSourceUpdateMode.OnPropertyChanged));
-            textBox1.Dock = DockStyle.Fill;
-            textBox1.Location = new Point(3, 3);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(732, 23);
-            textBox1.TabIndex = 0;
             // 
             // mainFormBindingSource
             // 
-            mainFormBindingSource.DataSource = typeof(ViewModel.MainForm);
+            mainFormBindingSource.DataSource = typeof(ViewModel.MainFormViewModel);
+            // 
+            // resultsBindingSource
+            // 
+            resultsBindingSource.DataMember = "Results";
+            resultsBindingSource.DataSource = mainFormBindingSource;
+            // 
+            // listBox1
+            // 
+            listBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            listBox1.DataSource = resultsBindingSource;
+            listBox1.DisplayMember = "FullName";
+            listBox1.FormattingEnabled = true;
+            listBox1.ItemHeight = 15;
+            listBox1.Location = new Point(12, 55);
+            listBox1.Margin = new Padding(2);
+            listBox1.Name = "listBox1";
+            listBox1.Size = new Size(769, 124);
+            listBox1.TabIndex = 3;
+            // 
+            // textBox1
+            // 
+            textBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            textBox1.DataBindings.Add(new Binding("Text", mainFormBindingSource, "Query", true, DataSourceUpdateMode.OnPropertyChanged));
+            textBox1.Location = new Point(12, 27);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(579, 23);
+            textBox1.TabIndex = 2;
             // 
             // button1
             // 
+            button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             button1.DataBindings.Add(new Binding("Command", mainFormBindingSource, "ClearQueryCommand", true));
-            button1.Location = new Point(741, 3);
+            button1.Font = new Font("Segoe UI Emoji", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button1.Location = new Point(597, 25);
             button1.Name = "button1";
-            button1.Size = new Size(25, 23);
-            button1.TabIndex = 1;
+            button1.Size = new Size(25, 24);
+            button1.TabIndex = 4;
             button1.Text = "❌";
             button1.UseVisualStyleBackColor = true;
             // 
-            // treeView1
+            // label1
             // 
-            treeView1.Dock = DockStyle.Fill;
-            treeView1.Location = new Point(3, 33);
-            treeView1.Name = "treeView1";
-            treeView1.Size = new Size(244, 431);
-            treeView1.TabIndex = 1;
+            label1.AutoSize = true;
+            label1.Location = new Point(12, 9);
+            label1.Name = "label1";
+            label1.Size = new Size(39, 15);
+            label1.TabIndex = 5;
+            label1.Text = "Query";
+            // 
+            // chkOnlyStartsWith
+            // 
+            chkOnlyStartsWith.AutoSize = true;
+            chkOnlyStartsWith.Location = new Point(629, 29);
+            chkOnlyStartsWith.Name = "chkOnlyStartsWith";
+            chkOnlyStartsWith.Size = new Size(152, 19);
+            chkOnlyStartsWith.TabIndex = 6;
+            chkOnlyStartsWith.Text = "Only Search 'StartsWith'";
+            chkOnlyStartsWith.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(lblSignature);
+            groupBox1.Controls.Add(label3);
+            groupBox1.Controls.Add(lblName);
+            groupBox1.Controls.Add(label2);
+            groupBox1.Location = new Point(12, 184);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(769, 365);
+            groupBox1.TabIndex = 7;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Selected API";
+            // 
+            // lblSignature
+            // 
+            lblSignature.AutoSize = true;
+            lblSignature.DataBindings.Add(new Binding("Text", resultsBindingSource, "FullName", true));
+            lblSignature.Location = new Point(79, 54);
+            lblSignature.Name = "lblSignature";
+            lblSignature.Size = new Size(38, 15);
+            lblSignature.TabIndex = 3;
+            lblSignature.Text = "label3";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label3.Location = new Point(6, 50);
+            label3.Name = "label3";
+            label3.Size = new Size(67, 19);
+            label3.TabIndex = 2;
+            label3.Text = "Signature";
+            // 
+            // lblName
+            // 
+            lblName.AutoSize = true;
+            lblName.DataBindings.Add(new Binding("Text", resultsBindingSource, "Name", true));
+            lblName.Location = new Point(79, 35);
+            lblName.Name = "lblName";
+            lblName.Size = new Size(38, 15);
+            lblName.TabIndex = 1;
+            lblName.Text = "label3";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label2.Location = new Point(6, 31);
+            label2.Name = "label2";
+            label2.Size = new Size(45, 19);
+            label2.TabIndex = 0;
+            label2.Text = "Name";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(793, 491);
-            Controls.Add(tableLayoutPanel1);
+            ClientSize = new Size(793, 561);
+            Controls.Add(groupBox1);
+            Controls.Add(chkOnlyStartsWith);
+            Controls.Add(label1);
+            Controls.Add(listBox1);
+            Controls.Add(textBox1);
+            Controls.Add(button1);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "XREF Browser";
             Load += Form1_Load;
             Shown += Form1_Shown;
             DataContextChanged += Form1_DataContextChanged;
-            tableLayoutPanel1.ResumeLayout(false);
-            tableLayoutPanel2.ResumeLayout(false);
-            tableLayoutPanel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)mainFormBindingSource).EndInit();
+            ((System.ComponentModel.ISupportInitialize)resultsBindingSource).EndInit();
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
-
-        private TableLayoutPanel tableLayoutPanel1;
-        private TreeView treeView1;
-        private TableLayoutPanel tableLayoutPanel2;
+        private BindingSource mainFormBindingSource;
+        private BindingSource resultsBindingSource;
+        private ListBox listBox1;
         private TextBox textBox1;
         private Button button1;
-        private BindingSource mainFormBindingSource;
+        private Label label1;
+        private CheckBox chkOnlyStartsWith;
+        private GroupBox groupBox1;
+        private Label lblSignature;
+        private Label label3;
+        private Label lblName;
+        private Label label2;
     }
 }

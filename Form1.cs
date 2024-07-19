@@ -19,14 +19,13 @@ namespace xrefBrowser
 
             if (downloadForm.DialogResult == DialogResult.Cancel)
             {
-                MessageBox.Show("You cancelled");
                 Close();
             }
 
             else
             {
                 // Prep Data
-                DataContext = new ViewModel.MainForm(downloadForm.Xref);
+                DataContext = downloadForm.ViewModel;
             }
         }
 
